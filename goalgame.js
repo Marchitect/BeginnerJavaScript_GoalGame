@@ -17,10 +17,13 @@ bgImage.src = "./imgs/background.png";
 // player image
 var playerReady = false;
 var playerImage = new Image();
+var playerAct = new Image();
 playerImage.onload = function () {
 	playerReady = true;
 };
 playerImage.src = "./imgs/player.png";
+playerAct.src = "./imgs/player1.png";
+
 
 // football image
 var footballReady = false;
@@ -56,7 +59,7 @@ var reset = function () {
 
 	// Throw the football in the right zone randomly
 	football.x = 32 + (Math.random() * (canvas.width - 64));
-	football.y = 32+185 + (Math.random() * (canvas.height - 64 - 185));
+	football.y = 32+185 + (Math.random() * (canvas.height - 64 - 200));
 };
 
 // Update game objects
@@ -82,20 +85,22 @@ var update = function (modifier) {
 		&& football.y <= (player.y + 68)
 	) {
 		++footballsCaught;
-		reset();
+//		reset();
 	}
 };
 
 // Draw everything
-var render = function () {
+var render = function (delta) {
 	if (bgReady) {
 		ctx.drawImage(bgImage, 0, 0);
 	}
 
-	if (playerReady) {
+	if (playerReady && (delta % 2 == 0)) {
 		ctx.drawImage(playerImage, player.x, player.y);
 	}
-
+    if (playerReady && (delta % 2 == 1)) {
+    	ctx.drawImage(playerAct, player.x, player.y);
+    }
 	if (footballReady) {
 		ctx.drawImage(footballImage, football.x, football.y);
 	}
@@ -112,11 +117,15 @@ var render = function () {
 var main = function () {
 	var now = Date.now();
 	var delta = now - then;
-
+    var interval = 5;
+    if(delta > interval){
+        then = now - (delta % interval);
+    }
 	update(delta / 1000);
-	render();
+//	setInterval(render, 300);
+	render(delta);
 
-	then = now;
+//	then = now;
 
 	// Request to do this again ASAP
 	requestAnimationFrame(main);
