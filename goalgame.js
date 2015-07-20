@@ -6,6 +6,9 @@ canvas.width = 512;
 canvas.height = 475;
 document.body.appendChild(canvas);
 
+//when the player is not close to football, can not goal
+//document.getElementById("subm").style.visibility = "hidden";
+
 // Background image
 var bgReady = false;
 var bgImage = new Image();
@@ -24,7 +27,6 @@ playerImage.onload = function () {
 playerImage.src = "./imgs/player.png";
 playerAct.src = "./imgs/player1.png";
 
-
 // football image
 var footballReady = false;
 var footballImage = new Image();
@@ -32,6 +34,10 @@ footballImage.onload = function () {
 	footballReady = true;
 };
 footballImage.src = "./imgs/football.png";
+//default football speed vector
+//if possible might add a ball height vector, even banana ball in the future
+var ballvx = 0;
+var ballvy = 0;
 
 // Game objects
 var player = {
@@ -56,7 +62,8 @@ addEventListener("keyup", function (e) {
 var reset = function () {
 	player.x = canvas.width / 2;
 	player.y = canvas.height / 2;
-
+    ballvx = 0;
+    ballvy = 0;
 	// Throw the football in the right zone randomly
 	football.x = 32 + (Math.random() * (canvas.width - 64));
 	football.y = 32+185 + (Math.random() * (canvas.height - 64 - 200));
@@ -77,24 +84,51 @@ var update = function (modifier) {
 		player.x += player.speed * modifier;
 	}
 
-	// Are they touching?
+	// Is the player ready to goal (when his toes are near the football)
+	//not perfectly implemented yet
 	if (
 		player.x <= (football.x + 32)
 		&& football.x <= (player.x + 70)
 		&& player.y <= (football.y + 32)
-		&& football.y <= (player.y + 68)
+		&& football.y <= (player.y + 68) 
 	) {
-		++footballsCaught;
-//		reset();
+        document.getElementById("tip").style.visibility = "visible";
+        document.getElementById('subm').style.visibility = "visible";
+//        var b = document.getElementById("subm");
+//        enableButton(b);
+	}
+	//when the football reaches the goal area	
+	if(football.x >= 150 && football.x <= 320 && football.y<=30 && football.y>0){
+        ++footballsCaught;
+        reset();
+	}
+	//otherwise no goal
+	if(football.x >= 480 || football.x <= 0 || (football.y <= 0 && ((football.x > 320 && football.x<480)|| (football.x < 150 && football.x > 0)))){
+	    reset();
 	}
 };
 
+function disableButton(button) {
+    button.disabled = true;
+}
+function enableButton(button) {
+    button.disabled = false;
+}
+
+function change() {
+    ballvx = Number(f.hv.value);
+    ballvy = -Number(f.vv.value);
+    return false;
+}
+
 // Draw everything
 var render = function (delta) {
+    football.x = football.x + ballvx;
+    football.y = football.y + ballvy;
 	if (bgReady) {
 		ctx.drawImage(bgImage, 0, 0);
 	}
-
+    //the player walking animation, not perfect
 	if (playerReady && (delta % 2 == 0)) {
 		ctx.drawImage(playerImage, player.x, player.y);
 	}
@@ -117,18 +151,15 @@ var render = function (delta) {
 var main = function () {
 	var now = Date.now();
 	var delta = now - then;
-    var interval = 5;
-    if(delta > interval){
-        then = now - (delta % interval);
-    }
 	update(delta / 1000);
-//	setInterval(render, 300);
 	render(delta);
 
-//	then = now;
+	then = now;
 
-	// Request to do this again ASAP
-	requestAnimationFrame(main);
+	//Request to do this again, not really ASAP
+//    setInterval(main, 20);
+    //this is ASAP but not good visually for this game
+    requestAnimationFrame(main);
 };
 
 // Cross-browser support for requestAnimationFrame
